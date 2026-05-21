@@ -1,0 +1,227 @@
+@baseUrl = http://localhost:5000/api
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMGFlODQ3YzZhYjEwZTYyOTlhN2E0ZSIsImlhdCI6MTc3OTE4MTQzNSwiZXhwIjoxNzc5MTgyMzM1fQ.d4sVrDUKy_ubzmUfZN_bHH67TC9NU4apYwc-9JzwjvI
+@authorToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMGFlODZlYzZhYjEwZTYyOTlhN2E1MiIsImlhdCI6MTc3OTE4MDczMiwiZXhwIjoxNzc5MTgxNjMyfQ.cf6TLsPXK8_rMGX24RcDmXZk6mNFte2Y5FkHSJIYq2Y
+@studentToken = your_student_token_here
+
+### ==========================================
+### 1. AUTHENTICATION & USERS
+### ==========================================
+
+### Register an Admin
+# @name registerAdmin
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "fullName": "Admin User",
+  "email": "admin@trinetra.com",
+  "password": "password123",
+  "role": "admin"
+}
+
+###
+
+### Register an Author (Pending Approval)
+# @name registerAuthor
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "fullName": "laxman",
+  "email": "laxmankumavath1@gmail.com",
+  "password": "password123",
+  "role": "author"
+}
+
+###
+
+### Register a Student
+# @name registerStudent
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "fullName": "John Student",
+  "email": "student@trinetra.com",
+  "password": "password123",
+  "role": "student"
+}
+
+###
+
+### Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@trinetra.com",
+  "password": "password123"
+}
+
+### (Copy token from loginAdmin response to @adminToken above)
+
+### ==========================================
+### 2. ADMIN ACTIONS
+### ==========================================
+
+### Get Pending Authors
+GET {{baseUrl}}/admin/pending-authors
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Approve Author (Replace ID from pending-authors list)
+@pendingAuthorId =6a0c271e093992d96ad6ef95
+PUT {{baseUrl}}/admin/approve-author/{{pendingAuthorId}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Login Author
+# @name loginAuthor
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "author@trinetra.com",
+  "password": "password123"
+}
+
+### (Copy token from loginAuthor response to @authorToken above)
+
+### ==========================================
+### 3. EXAM MANAGEMENT (AUTHOR)
+### ==========================================
+
+### Create a New Exam
+# @name createExam
+POST {{baseUrl}}/exams/create
+Authorization: Bearer {{authorToken}}
+Content-Type: application/json
+
+{
+  "title": "Advanced JavaScript Concepts",
+  "description": "A comprehensive test on modern JS.",
+  "duration": 60,
+  "startTime": "2024-01-01T00:00:00Z",
+  "endTime": "2030-12-31T23:59:59Z",
+  "totalMarks": 0,
+  "instructions": "Do not switch tabs. Keep your face visible.",
+  "isPublished": true
+}
+
+###
+@examId = 6a0c1d7c5564296931e13fc7
+
+### Add a Question to Exam
+POST {{baseUrl}}/exams/questions/add
+Authorization: Bearer {{authorToken}}
+Content-Type: application/json
+
+{
+  "examId": "{{examId}}",
+  "type": "mcq",
+  "question": "What is closure in JavaScript?",
+  "options": [
+    { "text": "A function bundled with its lexical environment", "isCorrect": true },
+    { "text": "A new framework", "isCorrect": false },
+    { "text": "A type of database", "isCorrect": false }
+  ],
+  "marks": 5,
+  "difficultyLevel": "medium"
+}
+
+###
+
+### Get All Exams (For Author to see theirs, Student to see published)
+GET {{baseUrl}}/exams/all
+Authorization: Bearer {{studentToken}}
+
+###
+
+### ==========================================
+### 4. ATTEMPTS (STUDENT)
+### ==========================================
+
+### Login Student
+# @name loginStudent
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "student@trinetra.com",
+  "password": "password123"
+}
+
+### (Copy token from loginStudent response to @studentToken above)
+
+### Start Exam Attempt
+# @name startAttempt
+POST {{baseUrl}}/attempts/start
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "examId": "{{examId}}"
+}
+
+###
+@attemptId = replace_with_attempt_id_from_above
+
+### Submit Exam
+POST {{baseUrl}}/attempts/submit
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "attemptId": "{{attemptId}}",
+  "answers": [
+    {
+      "questionId": "replace_with_question_id",
+      "answer": "A function bundled with its lexical environment"
+    }
+  ],
+  "isAutoSubmit": false
+}
+
+###
+
+### Get Exam Result
+GET {{baseUrl}}/attempts/result/{{attemptId}}
+Authorization: Bearer {{studentToken}}
+
+###
+
+### ==========================================
+### 5. PROCTORING & VIOLATIONS (STUDENT/AI FRONTEND)
+### ==========================================
+
+### Log a Violation (Tab Switch)
+POST {{baseUrl}}/proctoring/violation
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "attemptId": "{{attemptId}}",
+  "type": "tab_switch",
+  "evidenceImage": "http://cloudinary.com/fake_image.jpg"
+}
+
+###
+
+### Log a Violation (Multiple Faces)
+POST {{baseUrl}}/proctoring/violation
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "attemptId": "{{attemptId}}",
+  "type": "multiple_faces"
+}
+
+###
+
+### Get Violations for Attempt (Admin/Author)
+GET {{baseUrl}}/proctoring/violations/{{attemptId}}
+Authorization: Bearer {{adminToken}}
