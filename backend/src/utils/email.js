@@ -11,6 +11,17 @@ const sendEmail = async (options) => {
     },
   });
 
+  transporter.verify(function (error, success) {
+  if (error) {
+    console.log("SMTP ERROR:", error);
+  } else {
+    console.log("SMTP SERVER READY");
+  }
+});
+
+console.log("SMTP USER:", process.env.SMTP_USER);
+console.log("SMTP PASS EXISTS:", !!process.env.SMTP_PASS);
+
   const mailOptions = {
     from: `"TRINETRA System" <${process.env.SMTP_USER}>`,
     to: options.email,
