@@ -571,7 +571,11 @@ const ExamPortal = () => {
 
       // Exit fullscreen if active
       if (document.fullscreenElement) {
-        document.exitFullscreen();
+        try {
+          await document.exitFullscreen();
+        } catch (err) {
+          console.error("Fullscreen exit error:", err);
+        }
       }
 
       // Navigate to results
@@ -952,7 +956,7 @@ const ExamPortal = () => {
                   </button>
                 ) : (
                   <button
-                    onClick={() => { if(window.confirm("Submit your final answers?")) submitTest(); }}
+                    onClick={() => submitTest()}
                     className="btn-cyber"
                     style={{ background: 'linear-gradient(135deg, var(--success) 0%, #047857 100%)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
                   >
