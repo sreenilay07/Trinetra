@@ -1,27 +1,25 @@
 const nodemailer = require('nodemailer');
 
-const sendEmail = async (options) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
-  transporter.verify(function (error, success) {
+// Verify SMTP connection on startup
+transporter.verify(function (error, success) {
   if (error) {
-    console.log("SMTP ERROR:", error);
+    console.error("❌ SMTP Connection Error:", error.message);
   } else {
-    console.log("SMTP SERVER READY");
+    console.log("✅ SMTP Server is ready to take our messages");
   }
 });
 
-console.log("SMTP USER:", process.env.SMTP_USER);
-console.log("SMTP PASS EXISTS:", !!process.env.SMTP_PASS);
-
+const sendEmail = async (options) => {
   const mailOptions = {
     from: `"TRINETRA System" <${process.env.SMTP_USER}>`,
     to: options.email,
